@@ -1,0 +1,49 @@
+--根据需求创建时间维表存储过程
+CREATE OR REPLACE FUNCTION public.test4(start_date text, end_date text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+declare
+i integer;
+date_count integer;
+  begin
+  TRUNCATE public.time_dim;
+  i:=0;
+  date_count=date_part('day',to_timestamp(end_date,'yyyy-MM-DD')-to_timestamp(start_date,'yyyy-MM-DD'));
+  FOR i IN 0..date_count LOOP
+  INSERT INTO public.time_dim (cdate,date_name,cyear,year_name,cquarter,quarter_name,cmonth,month_name,cweek,week_name,week_day,week_day_name) VALUES (
+ to_date(start_date,'yyyy-MM-DD'),
+ to_char(to_date(start_date,'yyyy-MM-DD'),'yyyy年')|| cast(to_char(to_date(start_date,'yyyy-MM-DD'),'MM') as integer)||'月'|| cast(to_char(to_date(start_date,'yyyy-MM-DD'),'DD') as integer) ||'日',
+  to_char(to_date(start_date,'yyyy-MM-DD'),'yyyy'),
+ to_char(to_date(start_date,'yyyy-MM-DD'),'yyyy年'),
+EXTRACT(QUARTER from (to_timestamp(start_date,'yyyy-MM-DD'))),
+to_char(to_date(start_date,'yyyy-MM-DD'),'yyyy年')||EXTRACT(QUARTER from (to_timestamp(start_date,'yyyy-MM-DD')))||'季度',
+ cast(to_char(to_date(start_date,'yyyy-MM-DD'),'MM') as integer),
+ to_char(to_date(start_date,'yyyy-MM-DD'),'yyyy年')|| cast(to_char(to_date(start_date,'yyyy-MM-DD'),'MM') as integer)||'月',
+ cast(EXTRACT(WEEK from (to_timestamp(start_date,'yyyy-MM-DD'))) as integer),
+ '第' || cast(EXTRACT(WEEK from (to_timestamp(start_date,'yyyy-MM-DD'))) as integer) || '周',
+case to_char(to_date(start_date,'yyyy-MM-DD'),'D')
+when '2' then '1'
+when '3' then '2'
+when '4' then '3'
+when '5' then '4'
+when '6' then '5'
+when '7' then '6'
+when '1' then '7'
+else null end,
+case to_char(to_date(start_date,'yyyy-MM-DD'),'D')
+when '2' then '星期一'
+when '3' then '星期二'
+when '4' then '星期三'
+when '5' then '星期四'
+when '6' then '星期五'
+when '7' then '星期六'
+when '1' then '星期日'
+else null end
+ );
+  start_date=(to_date(start_date,'yyyy-MM-DD')+interval '1D');
+  end loop;
+  return true;
+  end;
+$function$
+;

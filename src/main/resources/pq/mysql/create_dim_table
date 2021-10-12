@@ -1,0 +1,36 @@
+--根据需求创建时间维表存储过程
+CREATE DEFINER=`root`@`%` PROCEDURE `saas`.`insert_time_dim2`(in start_date VARCHAR(20),in date_count int)
+begin
+      declare i int;
+      set i=0;
+      while i<date_count do
+          INSERT into saas.time_dim
+(cdate,date_name,cyear,year_name,cquarter,quarter_name,cmonth,month_name,cweek,`week_name`,week_day,week_day_name)
+SELECT
+DATE_FORMAT(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),'%Y-%m-%d') cdate,
+DATE_FORMAT(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),'%Y年%m月%d日') date_name,
+DATE_FORMAT(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),'%Y') cyear,
+DATE_FORMAT(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),'%Y年') year_name,
+quarter(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s')) cquarter,
+CONCAT(DATE_FORMAT(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),'%Y'),'年',quarter(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s')),'季度') quarter_name,
+DATE_FORMAT(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),'%m') cmonth,
+DATE_FORMAT(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),'%Y年%m月') month_name,
+DATE_FORMAT(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),'%u')+1 cweek,
+CONCAT( '第',(DATE_FORMAT(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),'%u')+1) ,'周') `week_name`,
+CASE DATE_FORMAT(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),'%w')
+when '0' THEN '7'
+ELSE DATE_FORMAT(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),'%w') END week_day,
+CASE DATE_FORMAT(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),'%w')
+when '1' THEN '星期一'
+when '2' THEN '星期二'
+when '3' THEN '星期三'
+when '4' THEN '星期四'
+when '5' THEN '星期五'
+when '6' THEN '星期六'
+when '0' THEN '星期日'
+ELSE null END week_day_name
+from dual;
+set i=i+1;
+set start_date = DATE_FORMAT(date_add(STR_TO_DATE(start_date,'%Y-%m-%d %H:%i:%s'),interval 1 day),'%Y-%m-%d');
+end while;
+end
